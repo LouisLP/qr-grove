@@ -9,8 +9,16 @@
     garden: Garden
     palette: Palette
     view: View
+    ontoggle: () => void
   }
-  const { garden, palette, view }: Props = $props()
+  const { garden, palette, view, ontoggle }: Props = $props()
+
+  function handleKey(e: KeyboardEvent) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      ontoggle()
+    }
+  }
 
   let canvas: HTMLCanvasElement
   let scene = $state<GardenScene>()
@@ -35,14 +43,25 @@
   }
 </script>
 
-<canvas bind:this={canvas} aria-label={view === 'top'
-  ? 'Top-down view of the garden, readable as a QR code'
-  : 'Isometric view of the garden'}></canvas>
+<canvas
+  bind:this={canvas}
+  role='button'
+  tabindex='0'
+  onclick={ontoggle}
+  onkeydown={handleKey}
+  aria-label={view === 'top'
+    ? 'QR code view. Activate to show the garden'
+    : 'Garden view. Activate to show the QR code'}
+></canvas>
 
 <style>
   canvas {
+    position: absolute;
+    inset: 0;
     display: block;
     width: 100%;
     height: 100%;
+    cursor: pointer;
+    border-radius: 18px;
   }
 </style>

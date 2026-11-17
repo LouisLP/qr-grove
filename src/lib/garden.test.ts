@@ -32,11 +32,21 @@ describe('plantGarden', () => {
     }
   })
 
-  it.each(SEASONS)('%s: decorations on light modules stay small and light', (season) => {
+  it.each(SEASONS)('%s: decorations stay on light ground and are light or tiny', (season) => {
     const { parts } = plantGarden(qr, season, 3)
-    for (const p of parts.filter(p => p.decor)) {
-      expect(p.w).toBeLessThan(0.25)
-      expect(luminance(p.color)).toBeGreaterThan(0.4)
+    const c = (qr.size - 1) / 2
+    const decor = parts.filter(p => p.decor)
+    expect(decor.length).toBeGreaterThan(20)
+    for (const p of decor) {
+      const tiny = p.w * p.d <= 0.012
+      if (!tiny) {
+        expect(luminance(p.color), p.color).toBeGreaterThan(0.35)
+        expect(Math.max(p.w, p.d)).toBeLessThanOrEqual(0.4)
+      }
+      const row = Math.round(p.z + c)
+      const col = Math.round(p.x + c)
+      if (row >= 0 && col >= 0 && row < qr.size && col < qr.size)
+        expect(qr.isDark(row, col), `${row},${col}`).toBe(false)
     }
   })
 

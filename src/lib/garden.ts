@@ -21,6 +21,7 @@ export interface Part {
 }
 
 export interface Garden {
+  season: Season
   parts: Part[]
   /** Width of the ground plate, quiet zone included. */
   plate: number
@@ -35,6 +36,71 @@ export function mulberry32(seed: number): () => number {
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296
   }
+}
+
+type Put = (dx: number, y: number, dz: number, w: number, h: number, d: number, color: string, extraDelay?: number) => void
+
+const PROPS: Record<Season, (r: () => number, put: Put) => void> = {
+  // Pale blossom shrubs and white tulips
+  spring: (r, put) => {
+    if (r() < 0.5) {
+      put(0, 0, 0, 0.32, 0.22, 0.32, '#f4c4d3')
+      put(0, 0.22, 0, 0.2, 0.1, 0.2, '#fbe0e8', 40)
+    }
+    else {
+      for (const [dx, dz] of [
+        [-0.1, -0.06],
+        [0.08, 0.04],
+        [-0.02, 0.12],
+      ] as const) {
+        put(dx, 0, dz, 0.03, 0.28, 0.03, '#4c7a3a')
+        put(dx, 0.28, dz, 0.09, 0.1, 0.09, '#ffffff', 60)
+      }
+    }
+  },
+  // Sunflowers and beehives
+  summer: (r, put) => {
+    if (r() < 0.65) {
+      const h = 0.7 + r() * 0.4
+      put(0, 0, 0, 0.05, h, 0.05, '#3f6b2a')
+      put(0, h, 0, 0.3, 0.05, 0.3, '#f6c933', 80)
+      put(0, h + 0.05, 0, 0.1, 0.03, 0.1, '#6b4320', 100)
+    }
+    else {
+      put(0, 0, 0, 0.3, 0.32, 0.3, '#efc75e')
+      put(0, 0.32, 0, 0.34, 0.06, 0.34, '#f5d982', 40)
+      put(0.151, 0.08, 0, 0.02, 0.06, 0.06, '#3a2a14', 40)
+    }
+  },
+  // Pumpkins and pale mushrooms
+  autumn: (r, put) => {
+    if (r() < 0.55) {
+      put(0, 0, 0, 0.3, 0.22, 0.3, '#f0a050')
+      put(0, 0.22, 0, 0.04, 0.07, 0.04, '#4e5a22', 40)
+    }
+    else {
+      for (const [dx, dz, s] of [
+        [-0.08, 0, 1],
+        [0.1, 0.08, 0.7],
+      ] as const) {
+        put(dx, 0, dz, 0.07 * s, 0.16 * s, 0.07 * s, '#f1e6d0')
+        put(dx, 0.16 * s, dz, 0.24 * s, 0.07 * s, 0.24 * s, '#e3c79c', 40)
+      }
+    }
+  },
+  // Snowmen and snow drifts
+  winter: (r, put) => {
+    if (r() < 0.6) {
+      put(0, 0, 0, 0.36, 0.3, 0.36, '#fbfdff')
+      put(0, 0.3, 0, 0.27, 0.24, 0.27, '#fbfdff', 60)
+      put(0, 0.54, 0, 0.19, 0.18, 0.19, '#fbfdff', 120)
+      put(0.12, 0.6, 0, 0.1, 0.04, 0.04, '#f08a3c', 160)
+    }
+    else {
+      put(0, 0, 0, 0.38, 0.1, 0.3, '#f2f6fb')
+      put(0.05, 0.1, 0, 0.24, 0.07, 0.2, '#fbfdff', 40)
+    }
+  },
 }
 
 export function plantGarden(qr: QrMatrix, season: Season, seed: number): Garden {
@@ -110,5 +176,37 @@ export function plantGarden(qr: QrMatrix, season: Season, seed: number): Garden 
     }
   }
 
-  return { parts, plate: qr.size + QUIET_ZONE * 2 + 1, modules: qr.size }
+  // Seasonal props stand on light squares and the quiet zone. They're light-coloured
+  // (or tiny) so the top-down view still reads as open ground.
+  for (let row = -QUIET_ZONE; row < qr.size + QUIET_ZONE; row++) {
+    for (let col = -QUIET_ZONE; col < qr.size + QUIET_ZONE; col++) {
+      const inGrid = row >= 0 && col >= 0 && row < qr.size && col < qr.size
+      if (inGrid && qr.isDark(row, col))
+        continue
+      if (r() > (inGrid ? 0.035 : 0.06))
+        continue
+      const x = col - c + (r() - 0.5) * 0.3
+      const z = row - c + (r() - 0.5) * 0.3
+      const delay = Math.hypot(x, z) * 28 + 200 + r() * 200
+      PROPS[season](r, (dx, y, dz, w, h, d, color, extra = 0) =>
+        parts.push({
+          x: x + dx,
+          y,
+          z: z + dz,
+          w,
+          h,
+          d,
+          color,
+          delay: delay + extra,
+          decor: true,
+        }))
+    }
+  }
+
+  return {
+    season,
+    parts,
+    plate: qr.size + QUIET_ZONE * 2 + 1,
+    modules: qr.size,
+  }
 }

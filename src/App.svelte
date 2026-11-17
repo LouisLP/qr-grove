@@ -78,167 +78,122 @@
       say('Copy failed. Use the address bar instead')
     }
   }
+
+  const ICONS: Record<Season, string> = {
+    spring: 'M12 7.5a2.5 2.5 0 1 0 0 5a2.5 2.5 0 0 0 0-5M12 2c1.7 0 2.5 2 2.5 3.4M12 2c-1.7 0-2.5 2-2.5 3.4M21 9.5c-.5-1.6-2.7-1.8-4-1.3M21 9.5c.5 1.6-1.2 3-2.6 3.4M17.6 19.6c-1.4 1-3.2-.3-3.9-1.5M17.6 19.6c-1.4 1-3.4.3-4.3-.9M6.4 19.6c1.4 1 3.2-.3 3.9-1.5M6.4 19.6c-1.4-1-.9-3.2 0-4.3M3 9.5c.5-1.6 2.7-1.8 4-1.3M3 9.5c-.5 1.6 1.2 3 2.6 3.4',
+    summer: 'M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
+    autumn: 'M7 16a4 4 0 0 1-.9-7.9A6 6 0 0 1 17.6 7a4.5 4.5 0 0 1 .4 9M8 19l-1 2M12 19l-1 2M16 19l-1 2',
+    winter: 'M12 2v20M4.2 7l15.6 10M4.2 17L19.8 7M9.5 3.5L12 6l2.5-2.5M9.5 20.5L12 18l2.5 2.5',
+  }
 </script>
 
-<div class='page' style:--sky={palette.sky}>
+<div class='app' style:--sky={palette.sky}>
   <header>
-    <a class='mark' href='./' aria-label='QR Grove home'>
-      <svg viewBox='0 0 32 32' aria-hidden='true'><rect width='32' height='32' rx='7' fill='currentColor' opacity='.14' /><g fill='currentColor'><rect x='5' y='5' width='9' height='9' rx='1.5' /><rect x='18' y='5' width='9' height='9' rx='1.5' /><rect x='5' y='18' width='9' height='9' rx='1.5' /><rect x='18' y='18' width='4' height='4' rx='1' /><rect x='23' y='23' width='4' height='4' rx='1' /></g></svg>
-      QR Grove
-    </a>
+    <svg class='logo' viewBox='0 0 32 32' aria-hidden='true'><rect width='32' height='32' rx='7' fill='currentColor' opacity='.14' /><g fill='currentColor'><rect x='5' y='5' width='9' height='9' rx='1.5' /><rect x='18' y='5' width='9' height='9' rx='1.5' /><rect x='5' y='18' width='9' height='9' rx='1.5' /><rect x='18' y='18' width='4' height='4' rx='1' /><rect x='23' y='23' width='4' height='4' rx='1' /></g></svg>
+    <h1>QR Grove</h1>
   </header>
 
-  <main>
-    <section class='intro'>
-      <h1>A garden that's secretly a QR code</h1>
-      <p>Every tree, hedge and rock sits on a dark square of a real QR code. Look at it from above and your phone can scan it.</p>
-    </section>
-
-    <section class='stage-card' aria-label='Garden preview'>
-      <div class='stage'>
-        {#if garden}
-          <Stage bind:this={stage} {garden} {palette} {view} />
-        {/if}
-      </div>
-      <div class='stage-bar'>
-        <div class='views' role='radiogroup' aria-label='View'>
-          <button role='radio' aria-checked={view === 'iso'} onclick={() => (view = 'iso')}>Garden</button>
-          <button role='radio' aria-checked={view === 'top'} onclick={() => (view = 'top')}>QR code</button>
-        </div>
-        <p class='caption'>
-          {view === 'top'
-            ? 'Point your phone camera at the screen'
-            : 'Switch to QR code to see it from above'}
-        </p>
-      </div>
-    </section>
-
-    <section class='controls' aria-label='Garden settings'>
-      <div class='field wide'>
-        <label class='label' for='text'>Link or text</label>
-        <input id='text' type='text' bind:value={text} autocomplete='off' spellcheck='false' placeholder='https://…' />
-        {#if qr instanceof Error}
-          <p class='err' role='alert'>{qr.message}. Shorten it to plant a garden.</p>
-        {:else}
-          <p class='meta'>Version {qr.version} · {qr.size}×{qr.size} squares · {garden?.parts.length ?? 0} pieces</p>
-        {/if}
-      </div>
-
-      <div class='field'>
-        <span class='label' id='season-label'>Season</span>
-        <div class='seasons' role='radiogroup' aria-labelledby='season-label'>
-          {#each SEASONS as s (s)}
-            <button role='radio' aria-checked={season === s} onclick={() => (season = s)}>
-              <span class='swatch' style:background={PALETTES[s].ground} style:--leaf={PALETTES[s].canopy[0]}></span>
-              {PALETTES[s].label}
-            </button>
-          {/each}
-        </div>
-      </div>
-
-      <div class='field'>
-        <span class='label'>Actions</span>
-        <div class='actions'>
-          <button class='btn' onclick={() => seed++}>Replant</button>
-          <button class='btn primary' onclick={download} disabled={!garden}>Download PNG</button>
-          <button class='btn' onclick={copyLink}>Copy link</button>
-        </div>
-      </div>
-    </section>
+  <main class='stage'>
+    {#if garden}
+      <Stage bind:this={stage} {garden} {palette} {view} ontoggle={() => (view = view === 'iso'
+        ? 'top'
+        : 'iso')} />
+    {/if}
   </main>
 
-  <footer>
-    <p>Dark squares become trees, bushes, rocks and hedges with dark tops. Light squares stay open ground. The three corner squares are hedges around a pond. Error correction level Q lets the code survive up to 25% damage.</p>
-  </footer>
+  <section class='controls' aria-label='Garden settings'>
+    <div class='row'>
+      <div class='seg' role='radiogroup' aria-label='View'>
+        <button role='radio' aria-checked={view === 'iso'} onclick={() => (view = 'iso')}>Garden</button>
+        <button role='radio' aria-checked={view === 'top'} onclick={() => (view = 'top')}>QR code</button>
+      </div>
+      <div class='seg' role='radiogroup' aria-label='Season'>
+        {#each SEASONS as s (s)}
+          <button role='radio' aria-checked={season === s} onclick={() => (season = s)} title={PALETTES[s].label}>
+            <svg viewBox='0 0 24 24' aria-hidden='true'><path d={ICONS[s]} /></svg>
+            <span class='season-label'>{PALETTES[s].label}</span>
+          </button>
+        {/each}
+      </div>
+    </div>
+    <div class='row'>
+      <input id='text' type='text' bind:value={text} autocomplete='off' spellcheck='false' placeholder='Paste a link' aria-label='Link or text' aria-invalid={qr instanceof Error} />
+      <div class='icons'>
+        <button class='icon' onclick={() => seed++} aria-label='Replant' title='Replant'>
+          <svg viewBox='0 0 24 24' aria-hidden='true'><path d='M3 12a9 9 0 0 1 15.5-6.2L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.2L3 16M3 21v-5h5' /></svg>
+        </button>
+        <button class='icon' onclick={copyLink} aria-label='Copy link' title='Copy link'>
+          <svg viewBox='0 0 24 24' aria-hidden='true'><path d='M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7' /></svg>
+        </button>
+        <button class='icon primary' onclick={download} disabled={!garden} aria-label='Download PNG' title='Download PNG'>
+          <svg viewBox='0 0 24 24' aria-hidden='true'><path d='M12 3v12M7 10l5 5l5-5M5 21h14' /></svg>
+        </button>
+      </div>
+    </div>
+    {#if qr instanceof Error}
+      <p class='err' role='alert'>{qr.message}. Shorten it to plant a garden.</p>
+    {/if}
+  </section>
 
   <div class='toast' class:show={toast} role='status' aria-live='polite'>{toast}</div>
 </div>
 
 <style>
-  .page {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+  .app {
+    height: 100dvh;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
     padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px));
-  }
-  header {
-    max-width: 1080px;
-    width: 100%;
-    margin-inline: auto;
-    padding-block: 20px;
-  }
-  .mark {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: 1.15rem;
-    color: var(--fg);
-    text-decoration: none;
-    letter-spacing: -0.01em;
-  }
-  .mark svg {
-    width: 28px;
-    height: 28px;
-    color: var(--accent);
-  }
-  main {
-    max-width: 1080px;
-    width: 100%;
-    margin-inline: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    flex: 1;
-  }
-  .intro {
-    text-align: center;
-    max-width: 40rem;
-    margin-inline: auto;
-    padding-block: 8px 4px;
-  }
-  h1 {
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: clamp(1.9rem, 4.6vw, 3.1rem);
-    line-height: 1.05;
-    letter-spacing: -0.025em;
-    margin: 0 0 12px;
-    text-wrap: balance;
-  }
-  .intro p {
-    margin: 0;
-    color: var(--muted);
-    font-size: 1.02rem;
-    text-wrap: pretty;
-  }
-  .stage-card {
-    border-radius: 22px;
-    overflow: hidden;
-    border: 1px solid var(--line);
-    background: radial-gradient(120% 90% at 50% 20%, color-mix(in oklab, var(--sky) 100%, white 25%), var(--sky));
+    padding-block: max(14px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-bottom, 0px));
+    background: radial-gradient(90% 70% at 50% 45%, color-mix(in oklab, var(--sky) 70%, white), var(--sky));
     transition: background 0.6s;
   }
   @media (prefers-color-scheme: dark) {
-    .stage-card {
-      background: radial-gradient(120% 90% at 50% 20%, color-mix(in oklab, var(--sky) 22%, var(--surface)), var(--surface));
+    .app {
+      background: radial-gradient(90% 70% at 50% 45%, color-mix(in oklab, var(--sky) 20%, var(--surface)), var(--bg));
     }
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .logo {
+    width: 30px;
+    height: 30px;
+    color: var(--accent);
+  }
+  h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.35rem;
+    letter-spacing: -0.015em;
   }
   .stage {
     position: relative;
-    aspect-ratio: 16 / 10;
-    max-height: 72vh;
-    width: 100%;
+    min-height: 0;
   }
-  .stage-bar {
+  .controls {
+    width: 100%;
+    max-width: 640px;
+    margin-inline: auto;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 16px 18px;
+    gap: 10px;
   }
-  .views {
+  .row {
+    display: flex;
+    gap: 10px;
+    min-width: 0;
+  }
+  .row:first-child {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .seg {
     display: flex;
     padding: 4px;
     gap: 2px;
@@ -246,137 +201,89 @@
     background: var(--surface);
     border: 1px solid var(--line);
   }
-  .views button {
+  .seg button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     border: 0;
     background: transparent;
-    padding: 8px 18px;
+    padding: 8px 14px;
     border-radius: 999px;
     font-weight: 600;
-    font-size: 0.9rem;
-    cursor: pointer;
+    font-size: 0.88rem;
     color: var(--muted);
+    cursor: pointer;
     white-space: nowrap;
   }
-  .views button[aria-checked='true'] {
+  .seg button[aria-checked='true'] {
     background: var(--fg);
     color: var(--bg);
   }
-  .caption {
-    margin: 0;
-    text-align: center;
-    font-size: 0.85rem;
-    color: var(--muted);
+  svg path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
-  .controls {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr;
-    gap: 20px 28px;
-    padding: 24px;
-    border-radius: var(--radius);
-    background: var(--surface);
-    border: 1px solid var(--line);
-  }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    min-width: 0;
-  }
-  .wide {
-    grid-column: 1 / -1;
-  }
-  .label {
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 600;
-    color: var(--muted);
-  }
-  input {
-    padding: 13px 14px;
-    border-radius: 10px;
-    border: 1px solid var(--line);
-    background: var(--bg);
-    font-size: 1rem;
-    min-width: 0;
-  }
-  .meta,
-  .err {
-    margin: 0;
-    font-size: 0.82rem;
-    font-variant-numeric: tabular-nums;
-    color: var(--muted);
-  }
-  .err {
-    color: var(--danger);
-  }
-  .seasons {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-  }
-  .seasons button,
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px 8px;
-    border-radius: 10px;
-    border: 1px solid var(--line);
-    background: var(--bg);
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-  }
-  .seasons button[aria-checked='true'] {
-    border-color: var(--fg);
-    box-shadow: inset 0 0 0 1px var(--fg);
-    font-weight: 600;
-  }
-  .swatch {
-    width: 14px;
-    height: 14px;
-    border-radius: 4px;
-    box-shadow: inset 0 0 0 4px var(--leaf);
+  .seg svg {
+    width: 16px;
+    height: 16px;
     flex: none;
   }
-  .actions {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+  input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 18px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    font-size: 0.98rem;
+  }
+  input[aria-invalid='true'] {
+    border-color: var(--danger);
+  }
+  .icons {
+    display: flex;
     gap: 6px;
   }
-  .btn {
-    font-weight: 600;
+  .icon {
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    cursor: pointer;
   }
-  .btn.primary {
+  .icon svg {
+    width: 19px;
+    height: 19px;
+  }
+  .icon.primary {
     background: var(--accent);
     border-color: var(--accent);
     color: var(--accent-fg);
   }
-  .btn:disabled {
+  .icon:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
-  footer {
-    max-width: 44rem;
-    margin: 32px auto 0;
-    padding-block: 0 32px;
-    text-align: center;
-    color: var(--muted);
-    font-size: 0.85rem;
-  }
-  footer p {
+  .err {
     margin: 0;
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--danger);
   }
   .toast {
     position: fixed;
     left: 50%;
-    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-    transform: translate(-50%, 12px);
+    top: calc(16px + env(safe-area-inset-top, 0px));
+    transform: translate(-50%, -8px);
     background: var(--fg);
     color: var(--bg);
-    padding: 10px 16px;
+    padding: 9px 16px;
     border-radius: 999px;
     font-size: 0.88rem;
     font-weight: 500;
@@ -390,21 +297,21 @@
     opacity: 1;
     transform: translate(-50%, 0);
   }
-  @media (max-width: 760px) {
-    .stage {
-      aspect-ratio: 1;
+  @media (max-width: 560px) {
+    .season-label {
+      display: none;
     }
-    .controls {
-      grid-template-columns: 1fr;
-      padding: 18px;
+    .seg button {
+      padding: 8px 11px;
     }
-    .seasons {
-      grid-template-columns: repeat(2, 1fr);
+    .icon {
+      width: 42px;
+      height: 42px;
     }
   }
   @media (prefers-reduced-motion: reduce) {
     .toast,
-    .stage-card {
+    .app {
       transition: none;
     }
   }

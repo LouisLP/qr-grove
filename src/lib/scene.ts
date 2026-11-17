@@ -1,6 +1,7 @@
 import type { Garden } from './garden'
 import type { Palette } from './seasons'
 import * as THREE from 'three'
+import { WeatherLayer } from './weather'
 
 export type View = 'iso' | 'top'
 
@@ -94,6 +95,7 @@ export class GardenScene {
   private scene = new THREE.Scene()
   private camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 2000)
   private world: THREE.Group | null = null
+  private weather: WeatherLayer | null = null
   private mesh: THREE.InstancedMesh | null = null
   private garden: Garden | null = null
   private palette: Palette | null = null
@@ -121,6 +123,8 @@ export class GardenScene {
     this.mesh = mesh
     this.garden = garden
     this.palette = palette
+    this.weather = new WeatherLayer(palette.weather, garden.plate)
+    world.add(this.weather.mesh)
     this.scene.add(world)
     this.growStart = performance.now()
     this.growing = grow && !this.reduceMotion
@@ -150,6 +154,12 @@ export class GardenScene {
     addLights(scene)
     const { world, mesh } = buildWorld(this.garden, this.palette)
     writeMatrices(mesh, this.garden, () => 1)
+    let weather: WeatherLayer | null = null
+    if (view === 'iso') {
+      weather = new WeatherLayer(this.palette.weather, this.garden.plate)
+      weather.update(4, 1)
+      world.add(weather.mesh)
+    }
     scene.add(world)
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 2000)
     placeCamera(camera, view === 'top'
@@ -165,6 +175,7 @@ export class GardenScene {
         (o.material as THREE.Material).dispose()
       }
     })
+    weather?.dispose()
     renderer.dispose()
     if (!blob)
       throw new Error('Could not encode the image')
@@ -181,6 +192,8 @@ export class GardenScene {
     if (!this.world)
       return
     this.scene.remove(this.world)
+    this.weather?.dispose()
+    this.weather = null
     this.world.traverse((o) => {
       if (o instanceof THREE.Mesh) {
         o.geometry.dispose();
@@ -211,6 +224,10 @@ export class GardenScene {
     if (this.growing && this.mesh)
       this.growing = !writeMatrices(this.mesh, this.garden, d => Math.min(1, Math.max(0, (now - this.growStart - d) / GROW_MS)))
 
+    // Weather is gone well before the camera reaches top-down, so it never covers the code
+    this.weather?.update(this.reduceMotion
+      ? 4
+      : now / 1000, Math.max(0, 1 - easeInOutCubic(this.t) * 2))
     placeCamera(this.camera, this.t, w / h, this.garden.plate)
     renderer.render(this.scene, this.camera)
   }

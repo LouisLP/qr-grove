@@ -22,7 +22,11 @@ export interface Palette {
   pineShare: number
   /** Ambient tint behind the diorama. */
   sky: string
+  /** What falls or flies over the garden in the isometric view. */
+  weather: Weather
 }
+
+export type Weather = 'petals' | 'bees' | 'rain' | 'snow'
 
 export const PALETTES: Record<Season, Palette> = {
   spring: {
@@ -30,15 +34,22 @@ export const PALETTES: Record<Season, Palette> = {
     ground: '#eef3df',
     skirt: '#7a5a3c',
     trunk: '#5a3d28',
-    canopy: ['#2e5e2e', '#386b33', '#2a5230'],
+    canopy: [
+      '#8e3358',
+      '#7d2b4e',
+      '#963a5c',
+      '#8e3358',
+      '#2e5e2e',
+    ],
     pine: ['#24492c'],
-    bush: ['#2f5d34', '#3b6a2f'],
+    bush: ['#2f5d34', '#3b6a2f', '#7d2b4e'],
     rock: ['#3b3f45', '#474a50'],
     hedge: '#264d2b',
     pond: '#1f3d57',
-    deco: ['#ffffff', '#f6c9d6', '#fff2a8'],
-    pineShare: 0.1,
-    sky: '#e7efe0',
+    deco: ['#ffffff', '#f6c9d6', '#f9dbe4'],
+    pineShare: 0.06,
+    sky: '#f3e6ea',
+    weather: 'petals',
   },
   summer: {
     label: 'Summer',
@@ -53,7 +64,8 @@ export const PALETTES: Record<Season, Palette> = {
     pond: '#1b3a5c',
     deco: ['#f7e27a', '#ffffff'],
     pineShare: 0.15,
-    sky: '#e6eedb',
+    sky: '#e3efd6',
+    weather: 'bees',
   },
   autumn: {
     label: 'Autumn',
@@ -73,7 +85,8 @@ export const PALETTES: Record<Season, Palette> = {
     pond: '#233a4f',
     deco: ['#e8b26a', '#e5a05e'],
     pineShare: 0.15,
-    sky: '#f1e8d8',
+    sky: '#dcdedd',
+    weather: 'rain',
   },
   winter: {
     label: 'Winter',
@@ -88,6 +101,7 @@ export const PALETTES: Record<Season, Palette> = {
     pond: '#2b4a66',
     deco: ['#dfe6ee', '#e8edf3'],
     pineShare: 0.65,
-    sky: '#e4e9ef',
+    sky: '#e1e7ef',
+    weather: 'snow',
   },
 }
